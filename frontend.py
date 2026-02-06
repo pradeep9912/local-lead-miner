@@ -6,7 +6,27 @@ from backend import PlacesService
 
 load_dotenv()
 
+def validate_input(text: str, field_name: str) -> bool:
+    """
+    Validate user input to ensure it's not empty.
+    
+    Args:
+        text: Input text to validate
+        field_name: Name of the field for error message
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    if not text or not text.strip():
+        st.error(f"{field_name} cannot be empty.")
+        return False
+    return True
+
 def main():
+    """
+    Main Streamlit application for Google Maps Lead Mining.
+    Allows users to search for businesses and extract lead information.
+    """
     st.set_page_config(page_title="Lead Extractor Pro", layout="wide")
     
     st.title("📍 Google Maps Lead Miner")
@@ -24,8 +44,8 @@ def main():
         
         st.divider()
         
-        area = st.text_input("Target Area", "Thoraipakkam, Chennai")
-        biz_type = st.text_input("Business Category", "Gym")
+        area = st.text_input("Target Area", placeholder="e.g., Thoraipakkam, Chennai")
+        biz_type = st.text_input("Business Category", placeholder="e.g., Gym")
         
         run_btn = st.button("Extract Data", type="primary")
 
@@ -33,6 +53,9 @@ def main():
     if run_btn:
         if not api_key:
             st.error("Missing API Key. Please check your .env file.")
+            return
+        
+        if not validate_input(area, "Target Area") or not validate_input(biz_type, "Business Category"):
             return
 
         service = PlacesService(api_key)
