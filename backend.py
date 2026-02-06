@@ -15,8 +15,8 @@ class PlacesService:
         self.headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Field Masking: Request only what we need to save money
-            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.businessStatus"
+            # UPDATE 1: Added 'places.userRatingCount' to the request mask
+            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.businessStatus,places.userRatingCount"
         }
 
     def fetch_leads(self, query: str) -> pd.DataFrame:
@@ -46,16 +46,19 @@ class PlacesService:
         normalized = []
         
         for place in places:
-            # Skip permanently closed businesses
             if place.get("businessStatus") == "CLOSED_PERMANENTLY":
                 continue
 
+            website = place.get("websiteUri")
+            
             normalized.append({
                 "Business Name": place.get("displayName", {}).get("text", "N/A"),
                 "Address": place.get("formattedAddress", "N/A"),
                 "Phone": place.get("nationalPhoneNumber", "N/A"),
-                "Has Website": "Yes" if place.get("websiteUri") else "No",
-                "Website URL": place.get("websiteUri", "")
+                # UPDATE 2: Extract the rating count (default to 0 if missing)
+                "Ratings Count": place.get("userRatingCount", 0),
+                "Has Website": "Yes" if website else "No",
+                "Website URL": website if website else ""
             })
             
         return pd.DataFrame(normalized)

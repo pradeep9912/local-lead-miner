@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 from backend import PlacesService
 
-# 1. Load the secrets from your .env file
 load_dotenv()
 
 def main():
@@ -16,13 +15,11 @@ def main():
     with st.sidebar:
         st.header("Configuration")
         
-        # Security Check: Try to get key from .env first
         api_key = os.getenv("GOOGLE_API_KEY")
         
         if api_key:
             st.success("API Key loaded safely from environment.")
         else:
-            # Fallback if .env is missing
             api_key = st.text_input("Enter Google Maps API Key", type="password")
         
         st.divider()
@@ -47,21 +44,24 @@ def main():
         if not df.empty:
             st.success(f"Found {len(df)} businesses.")
             
-            # Create Tabs
-            tab1, tab2 = st.tabs(["📋 All Businesses", "🎯 No Website (Leads)"])
+            tab1, tab2 = st.tabs(["📋 All Businesses", "🎯 Leads (No Website)"])
             
+            # TAB 1: Show everything (Good for checking data)
             with tab1:
-               st.dataframe(df, use_container_width=True)
+                st.dataframe(df, use_container_width=True)
 
+            # TAB 2: Clean Leads View (No empty columns)
             with tab2:
-                # FILTER LOGIC: Only show rows where 'Has Website' is 'No'
                 leads = df[df['Has Website'] == "No"]
                 
                 if not leads.empty:
-                    st.dataframe(leads, use_container_width=True)
+                    # UPDATE: Drop the useless columns for this specific view
+                    clean_leads = leads.drop(columns=["Website URL", "Has Website"])
+                    
+                    st.dataframe(clean_leads, use_container_width=True)
                     
                     # CSV Download Button
-                    csv = leads.to_csv(index=False).encode('utf-8')
+                    csv = clean_leads.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         "Download Leads CSV",
                         csv,
